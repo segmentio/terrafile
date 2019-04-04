@@ -33,8 +33,9 @@ func TestTerraformWithTerrafilePath(t *testing.T) {
 	}
 	// Assert output
 	for _, output := range []string{
-		"Checking out v1.46.0 of git@github.com:terraform-aws-modules/terraform-aws-vpc -> ./.terrafile/vendor/terraform-aws-modules/terraform-aws-vpc/refs/v1.46.0",
-		"Checking out master of git@github.com:terraform-aws-modules/terraform-aws-vpc -> ./.terrafile/vendor/terraform-aws-modules/terraform-aws-vpc/refs/master",
+		"Cloning   git@github.com:terraform-aws-modules/terraform-aws-vpc",
+		"Vendoring ref master",
+		"Vendoring ref v1.46.0",
 	} {
 		assert.Contains(t, testcli.Stdout(), output)
 	}

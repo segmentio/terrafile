@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/jessevdk/go-flags"
@@ -17,6 +18,7 @@ var opts struct {
 	ModulePath string `short:"p" long:"module_path" default:"./.terrafile/vendor" description:"File path to install generated terraform modules"`
 
 	TerrafilePath string `short:"f" long:"terrafile_file" default:"./.terrafile/Terrafile" description:"File path to the Terrafile file"`
+	Debug         bool   `short:"d" long:"debug"`
 }
 
 // To be set by goreleaser on build
@@ -26,31 +28,59 @@ var (
 	date    = "unknown"
 )
 
-var previousRepo = "/tmp" // Used to speed up git clone using --reference-if-able 27s vs. 8.6s for 7 clones
+var tempDir string
 
 func init() {
 	// Needed to redirect logrus to proper stream STDOUT vs STDERR
 	log.AddHook(stdemuxerhook.New(log.StandardLogger()))
-}
-
-func gitClone(repositoryPath string, version string, referenceRepo string) string {
-	pathParts := strings.Split(repositoryPath, ":")
-	repositoryName := pathParts[1]
-	targetPath := fmt.Sprintf("%s/refs/%s", repositoryName, version)
-
-	log.Printf("[*] Checking out %s of %s -> %s/%s\n", version, repositoryPath, opts.ModulePath, targetPath)
-
-	args := []string{"clone", "-b", version, repositoryPath, targetPath}
-	if referenceRepo != "" {
-		args = append(args, "--reference-if-able", referenceRepo)
-	}
-	cmd := exec.Command("git", args...)
-	cmd.Dir = opts.ModulePath
-	err := cmd.Run()
+	var err error
+	tempDir, err = ioutil.TempDir("", "")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return targetPath
+}
+
+func gitClone(repositoryPath string) string {
+	pathParts := strings.Split(repositoryPath, ":")
+	repositoryName := pathParts[1]
+
+	repoPath := fmt.Sprintf("%s/%s", tempDir, repositoryName)
+	cmd := exec.Command("git", "clone", repositoryPath, repoPath)
+	if opts.Debug {
+		cmd.Stdout = os.Stderr
+		cmd.Stderr = os.Stderr
+	}
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	return repoPath
+}
+
+func gitCheckoutRef(repositoryPath string, ref string, destinationDir string) {
+	cmd := exec.Command("git", "checkout", ref)
+	cmd.Dir = repositoryPath
+	if opts.Debug {
+		cmd.Stdout = os.Stderr
+		cmd.Stderr = os.Stderr
+	}
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	destWithSlash := fmt.Sprintf("%s/", destinationDir)
+	cmd = exec.Command("git", "checkout-index", "--prefix", destWithSlash, "-a")
+	cmd.Dir = repositoryPath
+	if opts.Debug {
+		cmd.Stdout = os.Stderr
+		cmd.Stderr = os.Stderr
+	}
+	err = cmd.Run()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {
@@ -59,28 +89,36 @@ func main() {
 
 	// Invalid choice
 	if err != nil {
-		os.Exit(1)
+		panic("invalid arguments")
 	}
 
 	// Read File
 	yamlFile, err := ioutil.ReadFile(opts.TerrafilePath)
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 
 	// Parse File
 	var config map[string][]string
 	if err := yaml.Unmarshal(yamlFile, &config); err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
 
 	// Clone modules
 	os.RemoveAll(opts.ModulePath)
 	os.MkdirAll(opts.ModulePath, os.ModePerm)
 	for source, refs := range config {
-		var referenceRepo string
+		fmt.Printf("[*] Cloning   %s\n", source)
+		repo := gitClone(source)
 		for _, ref := range refs {
-			referenceRepo = gitClone(source, ref, referenceRepo)
+			pathParts := strings.Split(source, ":")
+			repositoryName := pathParts[1]
+			fmt.Printf("[*] Vendoring ref %s\n", ref)
+			targetPath, err := filepath.Abs(fmt.Sprintf("%s/%s/refs/%s", opts.ModulePath, repositoryName, ref))
+			if err != nil {
+				panic(err)
+			}
+			gitCheckoutRef(repo, ref, targetPath)
 		}
 	}
 }
