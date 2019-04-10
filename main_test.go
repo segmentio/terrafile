@@ -41,10 +41,10 @@ func TestTerraformWithTerrafilePath(t *testing.T) {
 	}
 	// Assert files exist
 	for _, moduleName := range []string{
-		"terraform-aws-modules/terraform-aws-vpc/refs/master",
-		"terraform-aws-modules/terraform-aws-vpc/refs/v1.46.0",
+		"terraform-aws-modules/terraform-aws-vpc/master",
+		"terraform-aws-modules/terraform-aws-vpc/v1.46.0",
 	} {
-		assert.DirExists(t, path.Join(workingDirectory, "./.terrafile/vendor", moduleName))
+		assert.DirExists(t, path.Join(workingDirectory, "./.terrafile", moduleName))
 	}
 }
 

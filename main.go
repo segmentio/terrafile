@@ -114,7 +114,7 @@ func main() {
 			pathParts := strings.Split(source, ":")
 			repositoryName := pathParts[1]
 			fmt.Printf("[*] Vendoring ref %s\n", ref)
-			targetPath, err := filepath.Abs(fmt.Sprintf("%s/%s/refs/%s", opts.ModulePath, repositoryName, ref))
+			targetPath, err := filepath.Abs(fmt.Sprintf("%s/%s/%s", opts.ModulePath, repositoryName, ref))
 			if err != nil {
 				panic(err)
 			}
