@@ -15,9 +15,9 @@ import (
 )
 
 var opts struct {
-	ModulePath string `short:"p" long:"module_path" default:"./.terrafile/vendor" description:"File path to install generated terraform modules"`
+	ModulePath string `short:"p" long:"module_path" default:"./.terrafile" description:"File path to install generated terraform modules"`
 
-	TerrafilePath string `short:"f" long:"terrafile_file" default:"./.terrafile/Terrafile" description:"File path to the Terrafile file"`
+	TerrafilePath string `short:"f" long:"terrafile_file" default:"./Terrafile" description:"File path to the Terrafile file"`
 	Debug         bool   `short:"d" long:"debug"`
 }
 
