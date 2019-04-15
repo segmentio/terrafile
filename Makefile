@@ -1,2 +1,2 @@
-release: ## Create packages for a release
+release:
 	./scripts/binary-release.sh
