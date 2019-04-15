@@ -5,7 +5,6 @@
 *.so
 *.dylib
 terrafile
-output
 
 # Test binary, build with `go test -c`
 *.test
