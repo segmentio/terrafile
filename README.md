@@ -1,6 +1,6 @@
 # Terrafile
 
-Terrafile is a binary written in Go to systematically manage external modules from Github for use in Terraform.
+Terrafile is a binary written in Go to systematically manage external modules from Github for use in Terraform. This is a fork of the original version found here: https://github.com/coretech/terrafile
 
 ## How to install
 
