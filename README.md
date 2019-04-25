@@ -1,59 +1,59 @@
-# Terrafile [![Build Status](https://circleci.com/gh/coretech/terrafile.svg?style=shield)](https://circleci.com/gh/coretech/terrafile)
+# Terrafile
 
-Terrafile is a binary written in Go to systematically manage external modules from Github for use in Terraform. See this [article](http://bensnape.com/2016/01/14/terraform-design-patterns-the-terrafile/) for more information on how it was introduced in a Ruby rake task.
+Terrafile is a binary written in Go to systematically manage external modules from Github for use in Terraform.
 
 ## How to install
 
 ### macOS
 
 ```sh
-brew tap coretech/terrafile && brew install terrafile
+brew tap segmentio/packages
+brew install segmentio/packages/terrafile
 ```
 
 ### Linux
+
 Download your preferred flavor from the [releases](https://github.com/coretech/terrafile/releases/latest) page and install manually.
 
-For example:
-```sh
-curl -L https://github.com/coretech/terrafile/releases/download/v{VERSION}/terrafile_{VERSION}_Linux_x86_64.tar.gz | tar xz -C /usr/local/bin
-```
-
 ## How to use
+
 Terrafile expects a file named `Terrafile` which will contain your terraform module dependencies in a yaml like format.
 
 An example Terrafile:
+
 ```
-tf-aws-vpc:
-    source:  "git@github.com:terraform-aws-modules/terraform-aws-vpc"
-    version: "v1.46.0"
-tf-aws-vpc-experimental:
-    source:  "git@github.com:terraform-aws-modules/terraform-aws-vpc"
-    version: "master"
+git@github.com:segmentio/my-modules:
+     - chamber_v2.0.0
+     - constants_v1.0.1
+     - iam_v1.0.0
+     - service_v1.0.4
+     - rds_v0.0.5
+     - worker_v1.1.0
+     - master
 ```
 
-Terrafile config file in current directory and modules exported to ./vendor/modules
+Terrafile config file in current directory and modules exported to .terrafile/<user>/<repo>/<ref>
+
 ```sh
 $ terrafile
-INFO[0000] [*] Checking out v1.46.0 of git@github.com:terraform-aws-modules/terraform-aws-vpc  
-INFO[0000] [*] Checking out master of git@github.com:terraform-aws-modules/terraform-aws-vpc  
+[*] Cloning   git@github.com:segmentio/my-modules
+[*] Vendoring ref chamber_v2.0.0
+[*] Vendoring ref constants_v1.0.1
+[*] Vendoring ref iam_v1.0.0
+[*] Vendoring ref service_v1.0.4
+[*] Vendoring ref rds_v0.0.5
+[*] Vendoring ref task-role_v1.0.5
+[*] Vendoring ref master
 ```
 
 Terrafile config file in custom directory
+
 ```sh
 $ terrafile -f config/Terrafile
-INFO[0000] [*] Checking out v1.46.0 of git@github.com:terraform-aws-modules/terraform-aws-vpc  
-INFO[0000] [*] Checking out master of git@github.com:terraform-aws-modules/terraform-aws-vpc  
 ```
 
 Terraform modules exported to custom directory
-```sh
-$ terrafile -p custom_directory
-INFO[0000] [*] Checking out master of git@github.com:terraform-aws-modules/terraform-aws-vpc  
-INFO[0001] [*] Checking out v1.46.0 of git@github.com:terraform-aws-modules/terraform-aws-vpc  
-```
 
-## TODO
-* Break out the main logic into seperate commands (e.g. version, help, run)
-* Update tests to include unit tests for broken out commands
-* Add coverage tool and badge
-* May be worth renaming Terrafile config file to something that won't be misinterpreted as the binary
+```sh
+$ terrafile -p /path/to/custom_directory
+```
