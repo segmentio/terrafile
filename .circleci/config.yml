@@ -1,46 +1,34 @@
-aliases:
-  - &dep_ensure
-    name: dep_ensure
-    command: |
-      go get -u github.com/golang/dep/cmd/dep
-      dep ensure
-
 defaults: &defaults
-  working_directory: /go/src/github.com/coretech/terrafile
+  working_directory: /go/src/github.com/segmentio/terrafile
   docker:
-    - image: circleci/golang:1.11.1
+    - image: circleci/golang:1.12.1
 
 version: 2
 jobs:
   build:
-    <<: *defaults 
-    steps:
-      - checkout
-      - run: *dep_ensure
-      - run:
-          name: build_and_test
-          command: |
-            go build -v
-            go test -v
-  deploy:
     <<: *defaults
     steps:
       - checkout
-      - run: *dep_ensure
-      - run: curl -sL https://git.io/goreleaser | bash
+      - run:
+          name: build_and_test
+          command: |
+            GO111MODULE=on go build -v
+            GO111MODULE=on go test -v
+      - run:
+          name: Check modules are tidy and checked in
+          command: |
+            export GO111MODULE=on
+            go mod tidy
+            go mod vendor
+            if [ "$(git status --porcelain)" != "" ]; then
+              echo "git tree is dirty after tidying and vendoring modules"
+              echo "ensure go.mod and go.sum are tidy and vendor is checked in"
+              git status
+              exit 1
+            fi
+
 workflows:
   version: 2
   release:
     jobs:
-      - build:
-          filters:  # required since `deploy` has tag filters AND requires `build`
-            tags:
-              only: /.*/
-      - deploy:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+      - build
