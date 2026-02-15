@@ -6,7 +6,7 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/nritholtz/stdemuxerhook v0.0.0-20181016194454-2c86ca05d211
 	github.com/rendon/testcli v1.0.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.1
 	github.com/stretchr/testify v1.8.1
 	gopkg.in/yaml.v2 v2.4.0
 )
